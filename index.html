@@ -1,0 +1,200 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>MLflow Quick Guide</title>
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://storage.googleapis.com/codelab-elements/codelab-elements.css">
+  <style>
+    .success {
+      color: #1e8e3e;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <google-codelab-analytics gaid="UA-49880327-14"></google-codelab-analytics>
+  <google-codelab codelab-gaid=""
+                  id="MLflow_intro"
+                  title="MLflow Quick Guide"
+                  environment="web"
+                  feedback-link="https://gitlab.com/yashashah5895">
+    
+      <google-codelab-step label="Overview" duration="1">
+        <h2 is-upgraded>Contents</h2>
+<ul>
+<li>Introduction</li>
+<li>Components (In detail)</li>
+<li>Quick Start</li>
+<li>Some technical things</li>
+</ul>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Introduction" duration="0">
+        <ul>
+<li>MLFlowTracking(<a href="https://www.mlflow.org/docs/latest/tracking.html#tracking" target="_blank">MLflow Tracking</a>): Tracking experiments to record and compare parameters and results of different runs.</li>
+<li>MLFlowProjects (<a href="https://www.mlflow.org/docs/latest/projects.html#projects" target="_blank">MLflow Projects</a>): Packaging ML code in a reusable, reproducible form in order to share with other data scientists or transfer to production.</li>
+<li>MLFlowModels (<a href="https://www.mlflow.org/docs/latest/models.html#models" target="_blank">MLflow Models</a>): Managing and deploying models from a variety of ML libraries to a variety of model serving and inference platforms</li>
+</ul>
+<p>MLflow is library-agnostic. You can use it with any machine learning library, and in any programming language, since all functions are accessible through a <a href="https://www.mlflow.org/docs/latest/rest-api.html#rest-api" target="_blank">REST API</a> and <a href="https://www.mlflow.org/docs/latest/cli.html#cli" target="_blank">CLI</a>.</p>
+<p>The code and examples shown here are exclusively in python.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Components" duration="3">
+        <h2 is-upgraded>Mlflow Tracking</h2>
+<p>The MLflow Tracking component is an API and UI for logging parameters, code versions, metrics, and output files when running your machine learning code and for later visualizing the results. MLflow Tracking lets you log and query experiments using Python, REST, R API, and Java API APIs.  The MLflow Python API logs runs locally to files in an mlruns directory wherever you ran your program. You can then run mlflow ui to see the logged runs.</p>
+<pre><code>  mlflow ui
+</code></pre>
+<p>Following are the standard logging functions which are used.</p>
+<pre><code>mlflow.start_run() #returns the currently active run (if one exists), or starts a new run. 
+</code></pre>
+<p>You do not need to call start_run explicitly: calling one of the logging functions with no active run automatically starts a new one.</p>
+<pre><code>	mlflow.end_run() #ends the currently active run.
+</code></pre>
+<p>if any, taking an optional run status.</p>
+<pre><code>	mlflow.log_param() #logs a single key-value param in the currently active run. 
+</code></pre>
+<p>The key and value are both strings. Use mlflow.log_params() to log multiple params at once.</p>
+<pre><code>	mlflow.log_metric() #logs a single key-value metric. 
+</code></pre>
+<p>The value must always be a number. MLflow remembers the history of values for each metric. Use mlflow.log_metrics() to log multiple metrics at once.</p>
+<pre><code>mlflow.log_artifact() #logs a local file or directory as an artifact, optionally taking an artifact_path to place it in within the run&#39;s artifact URI. 
+</code></pre>
+<p>Run artifacts can be organized into directories, so you can place the artifact in a directory this way.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="MLflow Project" duration="4">
+        <p>An MLflow Project is a format for packaging data science code in a reusable and reproducible way, based primarily on conventions. In addition, the Projects component includes an API and command-line tools for running projects, making it possible to chain together projects into workflows. Each project is simply a directory of files, or a Git repository, containing your code.</p>
+<p>It mainly contains two <em>.yaml</em> files named:</p>
+<ul>
+<li>A <em>conda.yaml</em> file, treated as a Conda environment</li>
+<li>More detailed <em>MLproject</em> file ( Remove the <em>.yaml</em> extension....still not clear why!)</li>
+</ul>
+<p>A conda.yaml file looks like this</p>
+<pre><code>name: name
+channels:
+    - defaults
+dependencies:
+    - python = 3.6
+    - scikit-learn
+    - pip:
+        - mlflow&gt;=1.0
+        
+</code></pre>
+<p>Where,</p>
+<ul>
+<li><em>Name</em> is any human-readable project name</li>
+<li><em>Channels</em>, refers to where Conda, the environment management tool, is going to look to find the declared dependencies. Currently, the defaults channel will search all URLs under the https://repo.anaconda.com/pkgs/ directory.</li>
+<li><em>Dependencies</em>, include all the packages required to be installed for running these program(s).</li>
+</ul>
+<p>And MLproject looks like this</p>
+<pre><code>name: tutorial
+
+conda_env: conda.yaml
+
+entry_points:
+  main:
+    parameters:
+      alpha: {type: float, default: 0.5}
+      l1_ratio: {type: float, default: 0.1}
+    command: &#34;python train.py {alpha} {l1_ratio}&#34;
+</code></pre>
+<ul>
+<li><em>conda_env</em>, The software environment that should be used to execute project entry points. This includes all library dependencies required by the project code. (Conda environment for our current scope of project).</li>
+<li><em>Entry Points</em>, Commands that can be run within the project, and information about their parameters. Most projects contain at least one entry point that you want other users to call.</li>
+</ul>
+<p><em>(Note: Not all Python packages are available as Conda packages. Some might only available through PyPI, or may be released there first. By including pip in the dependencies, that Python-specific package manager will be included. Listing packages below pip in the hierarchy, indicates that pip should be used to install those packages.)</em></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="MLflow Models" duration="5">
+        <p>An MLflow Model is a standard format for packaging machine learning models that can be used in a variety of downstream tools—for example, real-time serving through a REST API or batch inference on Apache Spark. (Like a python <em>pickle</em> module!)</p>
+<p>MLflow includes integrations with several common libraries. For example,</p>
+<ul>
+<li><a href="https://www.mlflow.org/docs/latest/python_api/mlflow.sklearn.html#module-mlflow.sklearn" target="_blank">mlflow.sklearn</a> contains <a href="https://www.mlflow.org/docs/latest/python_api/mlflow.sklearn.html#mlflow.sklearn.save_model" target="_blank">save_model</a></li>
+<li><a href="https://www.mlflow.org/docs/latest/python_api/mlflow.sklearn.html#mlflow.sklearn.log_model" target="_blank">log_model</a>, and <a href="https://www.mlflow.org/docs/latest/python_api/mlflow.sklearn.html#mlflow.sklearn.load_model" target="_blank">load_model</a> functions for scikit-learn models.</li>
+<li><a href="https://www.mlflow.org/docs/latest/python_api/mlflow.models.html#mlflow.models.Model" target="_blank">mlflow.models.Model</a> class to create and write models. There are built-in flavours, but model customization is also supported. Supports the adding of flavours, loading, saving, logging a model. The model can be deployed locally or as a Docker image.</li>
+</ul>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Quick Start" duration="6">
+        <h2 is-upgraded>Dataset: Forest Cover Type Dataset(<a href="https://archive.ics.uci.edu/ml/datasets/Covertype" target="_blank">Dataset</a>)</h2>
+<p>This dataset surveys four areas of the Roosevelt National Forest in Colorado and includes information on tree type, shadow coverage, distance to nearby landmarks (roads etcetera), soil type, and local topography. The forest cover type is the classification problem.</p>
+<h2 is-upgraded>Tensorflow</h2>
+<p>TensorFlow allows developers to create dataflow graphs(for language and hardware portability) where each node represents a mathematical operation, and each edge between nodes is a 3 or higher n-dimensional data array, or tensor. These are directed, acyclic graphs (DAG). Useful APIs include:</p>
+<ul>
+<li>tf.estimator - High level API for distributed training. Estimators allow for quick models, Checkpointing, Out-of-memory datasets, distributed training etc. Can feed data from numpy arrays/pandas dataframe.</li>
+<li>tf.layers, tf.losses, tf.metrics - For building custom Neural Network models.</li>
+</ul>
+<p>Python APIs - used to build the DAG.</p>
+<p>Simply put, build a DAG (a.k.a the model), create a session to run the model, feed model values using feed-dict(in tf.run()), run the model in the session. Variables are trainable in TF(eg. Weight vector for neural network). But in order to have formal parameters initialised at runtime, placeholders are used that can be initialised by feed-dict. train_and_evaluate function can be used for data parallelism.</p>
+<p>Use cases of Tensorflow include: Voice/Sound/Image Recognition, Text based applications, Time Series, Video Detection.</p>
+<h2 is-upgraded>Random Forest Classifier</h2>
+<p>A random forest is a meta estimator that fits a number of decision tree classifiers on various sub-samples of the dataset and uses averaging to improve the predictive accuracy and control over-fitting. We use the Random Forest classifier from <em>Scikit-learn</em> on the Forest Cover Type Dataset.</p>
+<p>Both the programs are configured to run any classification dataset.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="How to run" duration="7">
+        <ul>
+<li>First program is a demo program for sklearn where it selects random values of hyper-parameters from a given range and log to MLflow UI so that you have multiple models. It record metrics, parameters and artifacts(Plots, model, etc.) for each run. The number of runs are configurable.</li>
+<li>Second program is tensorflow program adopted from Kaggle to record multiple metrics. You can pass the arguments of hyper-parameters to get various results. By default, it will run with some default parameters and display a message with instructions like this<pre><code>This program can be ran by manually tuning the following Parameters
+Input the following parameters in a following way
+python file.py mini_batch_size no_of_epochs total_data_size test_size(in format %total_data_size)
+eg. python mlflow_tensor.py 10 1000 2000 0.4
+Running on default params right now 
+</code></pre>
+Code Snippet<pre><code>&#39;&#39;&#39;For logging tensorflow model&#39;&#39;&#39;
+with mlflow.start_run():
+        mlflow.log_artifact(sa_fig)
+        for value in range(len(tot_cost)):
+           mlflow.log_metric(&#39;loss&#39;,tot_cost[value])
+        mlflow.log_metric(&#34;Accuracy&#34;,fin_acc)
+        mlflow.log_param(&#34;Input Features&#34;,ip_features)
+        mlflow.log_param(&#34;Output Labels&#34;, op_features)
+        mlflow.log_param(&#34;Training_Size&#34;,len(training_set))
+        mlflow.log_param(&#34;Test_Size&#34;,len(test_set))
+        mlflow.log_param(&#34;Learning_rate&#34;,lr)
+mlflow.end_run()
+</code></pre>
+</li>
+</ul>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Some technical things" duration="8">
+        <ul>
+<li>The packaged ML project, should ideally be ran inside a virtual python environment (<em>venv</em>), so it doesn&#39;t mess with your original directories and scripts.</li>
+<li>There is an issue with conda activation within the automatic script which MLflow project calls. A work around is to use <em>–no-conda</em> at the end while running from CLI. <code>zsh<br>mlflow run projectname parameters(if any) --no-conda</code><br> More information here: <a href="https://github.com/mlflow/mlflow/issues/1507" target="_blank">https://github.com/mlflow/mlflow/issues/1507</a></li>
+</ul>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script src="https://storage.googleapis.com/codelab-elements/native-shim.js"></script>
+  <script src="https://storage.googleapis.com/codelab-elements/custom-elements.min.js"></script>
+  <script src="https://storage.googleapis.com/codelab-elements/prettify.js"></script>
+  <script src="https://storage.googleapis.com/codelab-elements/codelab-elements.js"></script>
+
+</body>
+</html>
